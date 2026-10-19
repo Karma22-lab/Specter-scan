@@ -1,0 +1,1163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="theme-color" content="#1f1130">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Specter Scan">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🏮</text></svg>">
+  <title>Specter Scan</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      user-select: none;
+      -webkit-tap-highlight-color: transparent;
+      touch-action: manipulation;
+    }
+    body {
+      background-color: #100719;
+      background-image: radial-gradient(#26113d 1px, transparent 1px);
+      background-size: 16px 16px;
+      color: #f0f4f8;
+      font-family: monospace;
+      margin: 0;
+      padding: 10px;
+      text-align: center;
+    }
+    .game-shell {
+      max-width: 420px;
+      margin: 0 auto;
+      background-color: #1f1130;
+      border: 4px solid #8c52ff;
+      border-radius: 12px;
+      padding: 12px;
+      box-shadow: 0 8px 0 #3a1873, 0 0 20px rgba(140, 82, 255, 0.35);
+    }
+    .top-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background-color: #13091f;
+      border: 2px solid #52308c;
+      border-radius: 6px;
+      padding: 6px 8px;
+      font-size: 12px;
+      margin-bottom: 10px;
+      color: #ffdd55;
+      font-weight: bold;
+      gap: 4px;
+    }
+    .sound-btn {
+      background-color: #361e5c;
+      color: #55ffaa;
+      border: 2px solid #55ffaa;
+      border-radius: 5px;
+      padding: 4px 8px;
+      font-size: 11px;
+      width: auto;
+      margin: 0;
+      box-shadow: none;
+    }
+    h1 {
+      color: #55ffaa;
+      font-size: 23px;
+      margin: 4px 0 10px 0;
+      text-shadow: 2px 2px 0 #000, 0 0 8px #22aa66;
+      letter-spacing: 1px;
+    }
+    h2 {
+      color: #ff99cc;
+      font-size: 18px;
+      margin: 4px 0 8px 0;
+      text-shadow: 2px 2px 0 #000;
+    }
+    .screen {
+      display: none;
+    }
+    .screen.active {
+      display: block;
+    }
+    .pixel-box {
+      background-color: #150a21;
+      border: 3px solid #5a3594;
+      border-radius: 8px;
+      padding: 11px;
+      margin-bottom: 10px;
+    }
+    .pixel-art-wrap {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      margin: 8px auto;
+      height: 76px;
+      animation: floatSprite 2s ease-in-out infinite;
+    }
+    @keyframes floatSprite {
+      0%, 100% { transform: translateY(0px); }
+      50% { transform: translateY(-5px); }
+    }
+    .shake-hit {
+      animation: hitShake 0.3s ease-in-out !important;
+    }
+    @keyframes hitShake {
+      0%, 100% { transform: translateX(0); }
+      25% { transform: translateX(-7px); }
+      75% { transform: translateX(7px); }
+    }
+    .badge {
+      display: inline-block;
+      padding: 3px 8px;
+      border-radius: 4px;
+      font-size: 11px;
+      font-weight: bold;
+      margin: 2px;
+      border: 1px solid #fff;
+    }
+    .type-Spirit { background-color: #4466ff; }
+    .type-Shadow { background-color: #662299; }
+    .type-Fire   { background-color: #dd4422; }
+    .type-Nature { background-color: #229944; }
+    .rare-Common   { background-color: #445566; }
+    .rare-Uncommon { background-color: #2277aa; }
+    .rare-Rare     { background-color: #cc8800; color: #000; }
+
+    button {
+      background-color: #ff4488;
+      color: #ffffff;
+      border: 3px solid #ffffff;
+      padding: 13px 10px;
+      font-family: monospace;
+      font-size: 15px;
+      font-weight: bold;
+      border-radius: 8px;
+      width: 100%;
+      margin-top: 7px;
+      cursor: pointer;
+      box-shadow: 0 4px 0 #991144;
+    }
+    button:active {
+      transform: translateY(3px);
+      box-shadow: 0 1px 0 #991144;
+    }
+    button:disabled {
+      opacity: 0.45;
+      cursor: not-allowed;
+    }
+    button.btn-blue {
+      background-color: #3388ff;
+      box-shadow: 0 4px 0 #114499;
+    }
+    button.btn-green {
+      background-color: #22bb66;
+      box-shadow: 0 4px 0 #116633;
+    }
+    button.btn-purple {
+      background-color: #8844ff;
+      box-shadow: 0 4px 0 #441199;
+    }
+    button.btn-gray {
+      background-color: #555566;
+      box-shadow: 0 4px 0 #222233;
+    }
+    button.btn-danger {
+      background-color: #aa2233;
+      box-shadow: 0 4px 0 #551118;
+      font-size: 12px;
+      padding: 8px;
+      margin-top: 12px;
+    }
+    .btn-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+    input[type="text"] {
+      width: 100%;
+      padding: 11px;
+      font-family: monospace;
+      font-size: 15px;
+      background-color: #0d0614;
+      color: #55ffaa;
+      border: 3px solid #7a44ff;
+      border-radius: 6px;
+      text-align: center;
+      margin-bottom: 4px;
+      user-select: text;
+    }
+    #camera-reader {
+      width: 100%;
+      background-color: #09040e;
+      border: 2px dashed #55ffaa;
+      border-radius: 6px;
+      overflow: hidden;
+      margin-bottom: 6px;
+      min-height: 34px;
+    }
+    .hp-bar-bg {
+      width: 100%;
+      height: 14px;
+      background-color: #331122;
+      border: 2px solid #ffffff;
+      border-radius: 4px;
+      overflow: hidden;
+      margin: 4px 0;
+    }
+    .hp-bar-fill {
+      height: 100%;
+      background-color: #44ee66;
+      width: 100%;
+      transition: width 0.25s;
+    }
+    .battle-log {
+      background-color: #0b0512;
+      border: 2px solid #6633aa;
+      border-radius: 6px;
+      padding: 9px;
+      min-height: 56px;
+      font-size: 13px;
+      color: #ffdd88;
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .list-card {
+      background-color: #1b0f2e;
+      border: 2px solid #6644aa;
+      border-radius: 6px;
+      padding: 8px 10px;
+      margin-bottom: 8px;
+      text-align: left;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+    }
+    .drawer {
+      background-color: #140824;
+      border: 2px dashed #ffdd55;
+      border-radius: 6px;
+      padding: 8px;
+      margin-top: 8px;
+      display: none;
+    }
+    .drawer.open {
+      display: block;
+    }
+    .small-note {
+      font-size: 12px;
+      color: #b5b5d6;
+      margin-top: 4px;
+    }
+  </style>
+</head>
+<body>
+
+<div class="game-shell">
+  <div class="top-bar">
+    <span id="ui-level">LVL 1 (0/20)</span>
+    <span id="ui-lantern">🏮 5/5</span>
+    <button id="btn-sound" class="sound-btn" onclick="toggleSound()">🔊 SFX: ON</button>
+  </div>
+
+  <!-- 1. HOME SCREEN -->
+  <div id="screen-home" class="screen active">
+    <h1>🏮 SPECTER SCAN</h1>
+    <div class="pixel-box">
+      <div class="small-note">ACTIVE PARTNER</div>
+      <div id="home-partner-art" class="pixel-art-wrap"></div>
+      <div id="home-partner-name" style="font-size:18px;font-weight:bold;color:#55ffaa;">Wispup</div>
+      <div id="home-partner-xp" class="small-note" style="color:#ffdd55;">Partner XP: 0/15</div>
+      <div id="home-partner-stats" class="small-note">HP: 32/32 | ATK: 9 | DEF: 6</div>
+    </div>
+
+    <button class="btn-green" onclick="showScreen('screen-scanner')">📷 SCAN BARCODE / QR</button>
+
+    <div class="btn-grid">
+      <button class="btn-purple" onclick="openCollection()">📖 COLLECTION (<span id="home-count">1</span>)</button>
+      <button class="btn-blue" onclick="openInventory()">🎒 INVENTORY (<span id="home-items">5</span>)</button>
+    </div>
+
+    <button class="btn-blue" onclick="freeHealAndRefill()">✨ FREE HEAL & REFILL LANTERN</button>
+    <p id="home-msg" class="small-note">Ready to hunt ghosts & monsters!</p>
+
+    <button class="btn-danger" onclick="confirmResetSave()">🗑️ RESET SAVE DATA</button>
+  </div>
+
+  <!-- 2. SCANNER SCREEN -->
+  <div id="screen-scanner" class="screen">
+    <h2>🔍 SUPERNATURAL SCANNER</h2>
+
+    <div class="pixel-box">
+      <div class="small-note" style="color:#55ffaa;margin-bottom:4px;">
+        <strong>LIVE PHONE CAMERA</strong>
+      </div>
+      <div id="camera-reader"></div>
+      <button id="btn-cam-start" class="btn-green" onclick="startCameraScanner()">📷 START CAMERA SCAN</button>
+      <button id="btn-cam-stop" class="btn-gray" style="display:none;" onclick="stopCameraScanner()">⏹️ STOP CAMERA</button>
+      <div id="cam-status" class="small-note">Point your S21 rear camera at any barcode or QR code.</div>
+    </div>
+
+    <div class="pixel-box">
+      <div class="small-note" style="margin-bottom:4px;">
+        <strong>MANUAL CODE & TEST SCANS</strong>
+      </div>
+      <input type="text" id="manual-code-input" placeholder="Enter barcode digits or text...">
+      <button class="btn-blue" onclick="scanManualCode()">⌨️ SCAN ENTERED CODE</button>
+      <button class="btn-green" onclick="scanRandomTestCode()">🎲 TEST SCAN (RANDOM)</button>
+      <div class="btn-grid">
+        <button class="btn-purple" onclick="scanPresetCode('GHOST-SEED-101')">🧪 CREATURE SEED</button>
+        <button class="btn-purple" onclick="scanPresetCode('ITEM-SEED-002')">🎁 ITEM SEED</button>
+      </div>
+    </div>
+
+    <p id="scan-warning" style="color:#ff7777;font-size:13px;min-height:18px;"></p>
+    <button class="btn-gray" onclick="leaveScannerScreen()">⬅️ BACK HOME</button>
+  </div>
+
+  <!-- 3. ENCOUNTER SCREEN -->
+  <div id="screen-encounter" class="screen">
+    <h2 id="enc-header">✨ DISCOVERY!</h2>
+    <div class="pixel-box">
+      <div class="small-note" id="enc-code-label">Code: ---</div>
+      <div id="enc-art" class="pixel-art-wrap"></div>
+      <div id="enc-title" style="font-size:20px;font-weight:bold;color:#55ffaa;">---</div>
+      <div id="enc-badges" style="margin:6px 0;"></div>
+      <p id="enc-desc" style="font-size:13px;color:#ddd;margin:6px 0;"></p>
+    </div>
+    <div id="enc-actions"></div>
+  </div>
+
+  <!-- 4. BATTLE SCREEN -->
+  <div id="screen-battle" class="screen">
+    <div class="pixel-box" style="margin-bottom:8px;padding:8px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;">
+        <strong id="btl-enemy-name" style="color:#ff99cc;">Wild Specter</strong>
+        <span id="btl-enemy-badges"></span>
+      </div>
+      <div id="btl-enemy-art" class="pixel-art-wrap" style="height:68px;margin:4px auto;"></div>
+      <div class="hp-bar-bg"><div id="btl-enemy-hp-bar" class="hp-bar-fill"></div></div>
+      <div id="btl-enemy-hp-text" class="small-note">HP: 25/25</div>
+    </div>
+
+    <div id="btl-log" class="battle-log">A wild creature appeared!</div>
+
+    <div class="pixel-box" style="margin-bottom:8px;padding:8px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;">
+        <strong id="btl-player-name" style="color:#55ffaa;">Wispup</strong>
+        <span id="btl-catch-odds" style="font-size:12px;color:#ffdd55;">Catch Odds: 45%</span>
+      </div>
+      <div id="btl-player-art" class="pixel-art-wrap" style="height:56px;margin:2px auto;"></div>
+      <div class="hp-bar-bg"><div id="btl-player-hp-bar" class="hp-bar-fill"></div></div>
+      <div id="btl-player-hp-text" class="small-note">HP: 32/32</div>
+    </div>
+
+    <div class="btn-grid">
+      <button onclick="playerAttack('basic')" id="btn-basic">⚔️ Attack</button>
+      <button class="btn-purple" onclick="playerAttack('special')" id="btn-special">✨ Special</button>
+      <button class="btn-blue" onclick="toggleBattleItemDrawer()">🎒 Use Item</button>
+      <button class="btn-green" onclick="attemptCapture()" id="btn-capture">🏮 Catch (45%)</button>
+    </div>
+
+    <div id="btl-item-drawer" class="drawer">
+      <div class="small-note" style="color:#ffdd55;margin-bottom:4px;">TAP AN ITEM TO USE (FREE ACTION):</div>
+      <div id="btl-item-buttons" class="btn-grid"></div>
+    </div>
+
+    <button class="btn-gray" onclick="fleeBattle()">🏃 Flee Battle</button>
+  </div>
+
+  <!-- 5. COLLECTION SCREEN -->
+  <div id="screen-collection" class="screen">
+    <h2>📖 CREATURE COLLECTION</h2>
+    <p class="small-note">Tap "Set Partner" to choose who fights & levels up!</p>
+    <div id="collection-list"></div>
+    <button class="btn-gray" onclick="showScreen('screen-home')">⬅️ BACK HOME</button>
+  </div>
+
+  <!-- 6. INVENTORY SCREEN -->
+  <div id="screen-inventory" class="screen">
+    <h2>🎒 ITEM INVENTORY</h2>
+    <p id="inv-msg" class="small-note" style="color:#55ffaa;">Items apply to your Active Partner or Lantern!</p>
+    <div id="inventory-list"></div>
+    <button class="btn-gray" onclick="showScreen('screen-home')">⬅️ BACK HOME</button>
+  </div>
+</div>
+
+<script>
+  const SAVE_KEY = "specter_scan_save_v2";
+
+  let soundEnabled = true;
+  let audioCtx = null;
+
+  function playSfx(type) {
+    if (!soundEnabled) return;
+    try {
+      if (!audioCtx) {
+        const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+        audioCtx = new AudioContextClass();
+      }
+      if (audioCtx.state === "suspended") audioCtx.resume();
+
+      if (type === "tap") {
+        beep(520, 0.05, "square");
+      } else if (type === "scan") {
+        beep(440, 0.07, "square", 0);
+        beep(660, 0.07, "square", 0.08);
+        beep(880, 0.12, "square", 0.16);
+      } else if (type === "hit") {
+        beep(190, 0.09, "sawtooth", 0);
+        beep(130, 0.12, "sawtooth", 0.08);
+      } else if (type === "catch") {
+        beep(523, 0.08, "square", 0);
+        beep(659, 0.08, "square", 0.09);
+        beep(784, 0.08, "square", 0.18);
+        beep(1046, 0.18, "square", 0.27);
+      } else if (type === "fail") {
+        beep(300, 0.10, "triangle", 0);
+        beep(210, 0.16, "triangle", 0.11);
+      }
+    } catch (e) {}
+  }
+
+  function beep(freq, duration, wave, delay = 0) {
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    osc.type = wave;
+    osc.frequency.setValueAtTime(freq, audioCtx.currentTime + delay);
+    gain.gain.setValueAtTime(0.08, audioCtx.currentTime + delay);
+    gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + delay + duration);
+    osc.connect(gain);
+    gain.connect(audioCtx.destination);
+    osc.start(audioCtx.currentTime + delay);
+    osc.stop(audioCtx.currentTime + delay + duration);
+  }
+
+  function toggleSound() {
+    soundEnabled = !soundEnabled;
+    const btn = document.getElementById("btn-sound");
+    btn.textContent = soundEnabled ? "🔊 SFX: ON" : "🔇 SFX: OFF";
+    btn.style.color = soundEnabled ? "#55ffaa" : "#aaaacc";
+    if (soundEnabled) playSfx("tap");
+  }
+
+  const PALETTE = {
+    C: "#55ffff",
+    B: "#4488ff",
+    W: "#ffffff",
+    P: "#aa55ff",
+    V: "#662299",
+    R: "#ff4433",
+    O: "#ff9922",
+    Y: "#ffee44",
+    G: "#44dd66",
+    L: "#99ff55",
+    S: "#9999aa",
+    K: "#111111"
+  };
+
+  function renderPixelArt(grid, scale = 8) {
+    let rects = "";
+    for (let r = 0; r < grid.length; r++) {
+      const row = grid[r];
+      for (let c = 0; c < row.length; c++) {
+        const ch = row[c];
+        if (ch !== "." && PALETTE[ch]) {
+          rects += `<rect x="${c * scale}" y="${r * scale}" width="${scale}" height="${scale}" fill="${PALETTE[ch]}" />`;
+        }
+      }
+    }
+    const size = 8 * scale;
+    return `<svg width="${size}" height="${size}" viewBox="0 0 ${size} ${size}" style="filter:drop-shadow(0 4px 0 #000);">${rects}</svg>`;
+  }
+
+  const CREATURE_DEX = [
+    { id: 1, name: "Wispup", kind: "Ghost", type: "Spirit", rarity: "Common", hp: 32, atk: 9, def: 6, basic: "Bark Byte", special: "Soul Howl", desc: "A loyal puppy ghost that trails glowing blue footprints.",
+      art: ["..C..C..",".CC..CC.",".CCCCCC.",".CKCCKC.",".CCCCCC.","..CCCC..","..C..C..","...CC..."] },
+    { id: 2, name: "Sheetling", kind: "Ghost", type: "Spirit", rarity: "Common", hp: 28, atk: 8, def: 7, basic: "Cloth Slap", special: "Eerie Draft", desc: "Loves hiding inside laundry baskets and old curtains.",
+      art: ["..WWWW..",".WWWWWW.",".WKWWKW.",".WWWWWW.",".WWWWWW.",".WWWWWW.",".W.WW.W.",".W....W."] },
+    { id: 3, name: "Cinderimp", kind: "Monster", type: "Fire", rarity: "Common", hp: 30, atk: 10, def: 5, basic: "Ember Poke", special: "Flame Hop", desc: "A mischievous spark monster that snacks on burnt toast.",
+      art: [".R....R.",".RR..RR.",".RRRRRR.",".RYRRYR.",".RRRRRR.","..ROOR..","..R..R..",".OO..OO."] },
+    { id: 4, name: "Mosslet", kind: "Monster", type: "Nature", rarity: "Common", hp: 35, atk: 8, def: 8, basic: "Vine Tap", special: "Spore Puff", desc: "A walking clump of damp forest moss with bright button eyes.",
+      art: ["...LL...","..LLLL..",".GGGGGG.",".GGGGGG.",".GKGGKG.",".GGGGGG.",".GG..GG.","........"] },
+    { id: 5, name: "Gloomoth", kind: "Monster", type: "Shadow", rarity: "Common", hp: 29, atk: 9, def: 6, basic: "Wing Flick", special: "Dusk Dust", desc: "Flutters around porch lights soaking up stray shadows.",
+      art: ["P......P","PP.VV.PP","PPPVVPPP","PPYVVYPP","PPPVVPPP",".P.VV.P.","...VV...","........"] },
+    { id: 6, name: "Polterkettle", kind: "Ghost", type: "Fire", rarity: "Uncommon", hp: 38, atk: 11, def: 8, basic: "Steam Shot", special: "Boiling Whistle", desc: "A haunted teapot that whistles spooky melodies at midnight.",
+      art: ["...YY...","..PPPP..","O.PPPP.P","OOPKPK.P",".OPPPPPP","..PPPP..","..OOOO..","........"] },
+    { id: 7, name: "Briarfang", kind: "Monster", type: "Nature", rarity: "Uncommon", hp: 40, atk: 12, def: 8, basic: "Thorn Bite", special: "Root Snare", desc: "A thorny beast whose bark-like fur smells like pine needles.",
+      art: [".G....G.",".GG..GG.",".GGGGGG.",".GYGGYG.",".GGGGGG.",".GWWWWG.","..GGGG..","..G..G.."] },
+    { id: 8, name: "Shadeweaver", kind: "Ghost", type: "Shadow", rarity: "Uncommon", hp: 34, atk: 13, def: 7, basic: "Cobweb Lash", special: "Night Veil", desc: "Spins shimmering webs out of forgotten attic memories.",
+      art: [".P.PP.P.","..VVVV..","P.RVRV.P",".VVVVVV.","P.VVVV.P","..P..P..",".P....P.","........"] },
+    { id: 9, name: "Lanternjack", kind: "Ghost", type: "Fire", rarity: "Uncommon", hp: 37, atk: 12, def: 9, basic: "Candle Toss", special: "Jack-o-Flare", desc: "Guides lost travelers with a grin that flickers like a flame.",
+      art: ["...GG...","..OOOO..",".OOOOOO.",".OYOOYO.",".OOOOOO.",".OYYYYO.","..OOOO..","........"] },
+    { id: 10, name: "Astralorn", kind: "Ghost", type: "Spirit", rarity: "Rare", hp: 46, atk: 14, def: 10, basic: "Starlight Antler", special: "Phantom Charge", desc: "A majestic spectral stag whose antlers glow like constellations.",
+      art: ["Y.Y..Y.Y",".YYYYYY.","..CCCC..","..CKCK..","..CCCC..",".CCCCCC.","..C..C..","..C..C.."] },
+    { id: 11, name: "Dreadgoyle", kind: "Monster", type: "Shadow", rarity: "Rare", hp: 50, atk: 14, def: 12, basic: "Granite Claw", special: "Eclipse Roar", desc: "An ancient rooftop guardian awakened by thunder.",
+      art: ["S.S..S.S","SSSSSSSS","SSSRRSSS",".SSSSSS.",".SSSSSS.","..SSSS..","..S..S..",".SS..SS."] },
+    { id: 12, name: "Pyrewyrm", kind: "Monster", type: "Fire", rarity: "Rare", hp: 48, atk: 16, def: 10, basic: "Magma Snap", special: "Inferno Breath", desc: "A pocket-sized dragon coiled around a core of living lava.",
+      art: ["Y..RR..Y",".RRRRRR.",".RYRRYR.","O.RRRR.O","OO.OO.OO","..RRRR..",".RR..RR.",".YY..YY."] }
+  ];
+
+  const ITEM_DEX = [
+    { key: "potion", name: "Healing Potion", icon: "🧪", desc: "Restores +20 HP to your active partner.",
+      art: ["...WW...","...WW...","..WWWW..",".WGGGGW.",".WGGGGW.",".WGGGGW.","..WWWW..","........"] },
+    { key: "battery", name: "Lantern Battery", icon: "🔋", desc: "Restores +2 Lantern Energy (up to 5).",
+      art: ["..SSSS..",".YYYYYY.",".YCCCCY.",".YCCCCY.",".YCCCCY.",".YYYYYY.","..SSSS..","........"] },
+    { key: "charm", name: "Binding Charm", icon: "🧿", desc: "Boosts your next capture attempt by +25%!",
+      art: ["..PPPP..",".PCCCCP.","PCWWWWCP","PCWKKWCP","PCWWWWCP",".PCCCCP.","..PPPP..","........"] },
+    { key: "shard", name: "Spirit Shard", icon: "💎", desc: "Gives your active partner +20 XP toward leveling up.",
+      art: ["...CC...","..CCCC..",".CCWWCC.","CCWWWWCC",".CCWWCC.","..CCCC..","...CC...","........"] }
+  ];
+
+  let player = getDefaultPlayerState();
+  let currentWild = null;
+  let lastScannedCode = "";
+  let charmActive = false;
+  let codeCooldowns = {};
+  const COOLDOWN_MS = 30000;
+
+  let html5QrScanner = null;
+  let isCameraRunning = false;
+
+  function getCreatureArt(id, scale = 8) {
+    const found = CREATURE_DEX.find(c => c.id === id) || CREATURE_DEX[0];
+    return renderPixelArt(found.art, scale);
+  }
+
+  function createCreatureInstance(template, level) {
+    return {
+      id: template.id,
+      name: template.name,
+      kind: template.kind,
+      type: template.type,
+      rarity: template.rarity,
+      level: level,
+      xp: 0,
+      xpNeeded: 15,
+      maxHp: template.hp,
+      hp: template.hp,
+      atk: template.atk,
+      def: template.def,
+      basic: template.basic,
+      special: template.special,
+      desc: template.desc
+    };
+  }
+
+  function getDefaultPlayerState() {
+    return {
+      level: 1,
+      xp: 0,
+      xpNeeded: 20,
+      lanternEnergy: 5,
+      maxLantern: 5,
+      activePartnerIndex: 0,
+      collection: [ createCreatureInstance(CREATURE_DEX[0], 1) ],
+      inventory: {
+        potion: 2,
+        battery: 1,
+        charm: 1,
+        shard: 1
+      }
+    };
+  }
+
+  function saveGame() {
+    try {
+      localStorage.setItem(SAVE_KEY, JSON.stringify(player));
+    } catch (e) {}
+  }
+
+  function loadGame() {
+    try {
+      const saved = localStorage.getItem(SAVE_KEY);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (parsed && parsed.collection && parsed.inventory) {
+          player = parsed;
+        }
+      }
+    } catch (e) {}
+  }
+
+  function confirmResetSave() {
+    playSfx("tap");
+    const ok = confirm("Erase all captured creatures, items, and levels and start fresh?");
+    if (ok) {
+      try { localStorage.removeItem(SAVE_KEY); } catch (e) {}
+      player = getDefaultPlayerState();
+      codeCooldowns = {};
+      charmActive = false;
+      document.getElementById("home-msg").textContent = "🗑️ Save data reset! Welcome back, Lv.1 Hunter.";
+      updateTopBarAndHome();
+    }
+  }
+
+  function hashCode(str) {
+    let hash = 2166136261;
+    for (let i = 0; i < str.length; i++) {
+      hash ^= str.charCodeAt(i);
+      hash = Math.imul(hash, 16777619);
+    }
+    return Math.abs(hash);
+  }
+
+  function showScreen(screenId) {
+    playSfx("tap");
+    if (screenId !== "screen-scanner" && isCameraRunning) {
+      stopCameraScanner();
+    }
+    document.querySelectorAll(".screen").forEach(s => s.classList.remove("active"));
+    document.getElementById(screenId).classList.add("active");
+    document.getElementById("scan-warning").textContent = "";
+    updateTopBarAndHome();
+  }
+
+  function leaveScannerScreen() {
+    stopCameraScanner();
+    showScreen("screen-home");
+  }
+
+  function getTotalItemCount() {
+    const inv = player.inventory;
+    return (inv.potion || 0) + (inv.battery || 0) + (inv.charm || 0) + (inv.shard || 0);
+  }
+
+  function updateTopBarAndHome() {
+    document.getElementById("ui-level").textContent = `LVL ${player.level} (${player.xp}/${player.xpNeeded} XP)`;
+    document.getElementById("ui-lantern").textContent = `🏮 ${player.lanternEnergy}/${player.maxLantern}`;
+    document.getElementById("home-count").textContent = player.collection.length;
+    document.getElementById("home-items").textContent = getTotalItemCount();
+
+    const partner = player.collection[player.activePartnerIndex];
+    document.getElementById("home-partner-art").innerHTML = getCreatureArt(partner.id, 8);
+    document.getElementById("home-partner-name").textContent = `${partner.name} (Lv.${partner.level})`;
+    document.getElementById("home-partner-xp").textContent = `Partner XP: ${partner.xp || 0}/${partner.xpNeeded || 15}`;
+    document.getElementById("home-partner-stats").textContent =
+      `HP: ${partner.hp}/${partner.maxHp} | ATK: ${partner.atk} | DEF: ${partner.def}`;
+  }
+
+  function freeHealAndRefill() {
+    playSfx("catch");
+    player.lanternEnergy = player.maxLantern;
+    player.collection.forEach(c => c.hp = c.maxHp);
+    saveGame();
+    document.getElementById("home-msg").textContent = "✨ All creatures healed & Lantern refilled to 5/5!";
+    updateTopBarAndHome();
+  }
+
+  function loadScannerLibrary() {
+    return new Promise((resolve, reject) => {
+      if (typeof Html5Qrcode !== "undefined") {
+        resolve();
+        return;
+      }
+      const script = document.createElement("script");
+      script.src = "https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js";
+      script.onload = () => resolve();
+      script.onerror = () => reject(new Error("Library load blocked"));
+      document.head.appendChild(script);
+    });
+  }
+
+  function startCameraScanner() {
+    playSfx("tap");
+    const statusEl = document.getElementById("cam-status");
+    const warnEl = document.getElementById("scan-warning");
+    warnEl.textContent = "";
+    statusEl.textContent = "Loading scanner module...";
+
+    loadScannerLibrary().then(() => {
+      if (isCameraRunning) return;
+      statusEl.textContent = "Requesting Galaxy S21 rear camera...";
+      html5QrScanner = new Html5Qrcode("camera-reader");
+
+      html5QrScanner.start(
+        { facingMode: "environment" },
+        { fps: 10, qrbox: { width: 220, height: 140 } },
+        (decodedText) => {
+          const safePlainText = String(decodedText).trim();
+          if (!safePlainText) return;
+
+          const cleanCode = safePlainText.slice(0, 60);
+          if (codeCooldowns[cleanCode] && Date.now() < codeCooldowns[cleanCode]) {
+            const secsLeft = Math.ceil((codeCooldowns[cleanCode] - Date.now()) / 1000);
+            warnEl.textContent = `⏳ Cooldown! Wait ${secsLeft}s before scanning "${cleanCode}" again.`;
+            return;
+          }
+
+          stopCameraScanner().then(() => {
+            processScannedCode(safePlainText);
+          });
+        },
+        () => {}
+      ).then(() => {
+        isCameraRunning = true;
+        document.getElementById("btn-cam-start").style.display = "none";
+        document.getElementById("btn-cam-stop").style.display = "block";
+        statusEl.textContent = "Point camera 5-8 inches from any barcode or QR code!";
+      }).catch(() => {
+        isCameraRunning = false;
+        statusEl.textContent = "Camera permission blocked or denied.";
+        warnEl.textContent =
+          "💡 Make sure you're opening the standalone HTTPS link in Chrome and tapping 'Allow' when asked for camera access!";
+      });
+    }).catch(() => {
+      statusEl.textContent = "Could not load camera library.";
+      warnEl.textContent = "Please use Manual Entry or Test Scan below.";
+    });
+  }
+
+  function stopCameraScanner() {
+    if (!html5QrScanner || !isCameraRunning) {
+      isCameraRunning = false;
+      document.getElementById("btn-cam-start").style.display = "block";
+      document.getElementById("btn-cam-stop").style.display = "none";
+      return Promise.resolve();
+    }
+    return html5QrScanner.stop().then(() => {
+      html5QrScanner.clear();
+      isCameraRunning = false;
+      document.getElementById("btn-cam-start").style.display = "block";
+      document.getElementById("btn-cam-stop").style.display = "none";
+      document.getElementById("cam-status").textContent = "Camera stopped.";
+    }).catch(() => {
+      isCameraRunning = false;
+      document.getElementById("btn-cam-start").style.display = "block";
+      document.getElementById("btn-cam-stop").style.display = "none";
+    });
+  }
+
+  function scanManualCode() {
+    const raw = document.getElementById("manual-code-input").value.trim();
+    if (!raw) {
+      document.getElementById("scan-warning").textContent = "Please type a code first!";
+      return;
+    }
+    processScannedCode(raw);
+  }
+
+  function scanRandomTestCode() {
+    const randomBarcode = "TEST-" + Math.floor(100000 + Math.random() * 900000);
+    processScannedCode(randomBarcode);
+  }
+
+  function scanPresetCode(presetText) {
+    processScannedCode(presetText);
+  }
+
+  function processScannedCode(codeText) {
+    const cleanCode = String(codeText).replace(/[<>]/g, "").slice(0, 60);
+    const now = Date.now();
+
+    if (codeCooldowns[cleanCode] && now < codeCooldowns[cleanCode]) {
+      playSfx("fail");
+      const secsLeft = Math.ceil((codeCooldowns[cleanCode] - now) / 1000);
+      document.getElementById("scan-warning").textContent =
+        `⏳ Cooldown! Wait ${secsLeft}s before scanning "${cleanCode}" again.`;
+      return;
+    }
+
+    playSfx("scan");
+    lastScannedCode = cleanCode;
+    const seed = hashCode(cleanCode);
+    const roll100 = seed % 100;
+
+    document.getElementById("enc-code-label").textContent = `Scanned Seed: "${cleanCode}"`;
+
+    if (roll100 < 60) {
+      const rarityRoll = (seed >> 3) % 100;
+      let pool = [];
+      if (rarityRoll < 60) {
+        pool = CREATURE_DEX.filter(c => c.rarity === "Common");
+      } else if (rarityRoll < 90) {
+        pool = CREATURE_DEX.filter(c => c.rarity === "Uncommon");
+      } else {
+        pool = CREATURE_DEX.filter(c => c.rarity === "Rare");
+      }
+      const chosenTemplate = pool[seed % pool.length];
+      currentWild = createCreatureInstance(chosenTemplate, 1);
+
+      document.getElementById("enc-header").textContent = `👻 WILD ${currentWild.kind.toUpperCase()}!`;
+      document.getElementById("enc-art").innerHTML = getCreatureArt(currentWild.id, 9);
+      document.getElementById("enc-title").textContent = currentWild.name;
+      document.getElementById("enc-badges").innerHTML =
+        `<span class="badge type-${currentWild.type}">${currentWild.type}</span>` +
+        `<span class="badge rare-${currentWild.rarity}">${currentWild.rarity}</span>`;
+      document.getElementById("enc-desc").textContent = currentWild.desc;
+      document.getElementById("enc-actions").innerHTML =
+        `<button class="btn-green" onclick="startBattle()">⚔️ ENGAGE IN BATTLE</button>` +
+        `<button class="btn-gray" onclick="showScreen('screen-home')">🏃 LEAVE IT ALONE</button>`;
+    } else {
+      const itemObj = ITEM_DEX[seed % ITEM_DEX.length];
+      player.inventory[itemObj.key] = (player.inventory[itemObj.key] || 0) + 1;
+      codeCooldowns[cleanCode] = Date.now() + COOLDOWN_MS;
+      gainPlayerXp(5);
+      saveGame();
+
+      document.getElementById("enc-header").textContent = "🎁 ITEM DISCOVERED!";
+      document.getElementById("enc-art").innerHTML = renderPixelArt(itemObj.art, 9);
+      document.getElementById("enc-title").textContent = `+1 ${itemObj.name}`;
+      document.getElementById("enc-badges").innerHTML =
+        `<span class="badge rare-Uncommon">Owned: ${player.inventory[itemObj.key]}</span>`;
+      document.getElementById("enc-desc").textContent = `${itemObj.desc} (+5 Player XP!)`;
+      document.getElementById("enc-actions").innerHTML =
+        `<button class="btn-green" onclick="showScreen('screen-scanner')">🔍 SCAN ANOTHER</button>` +
+        `<button class="btn-blue" onclick="openInventory()">🎒 VIEW INVENTORY</button>` +
+        `<button class="btn-gray" onclick="showScreen('screen-home')">🏠 BACK HOME</button>`;
+    }
+
+    document.querySelectorAll(".screen").forEach(s => s.classList.remove("active"));
+    document.getElementById("screen-encounter").classList.add("active");
+    updateTopBarAndHome();
+  }
+
+  function startBattle() {
+    const partner = player.collection[player.activePartnerIndex];
+    if (partner.hp <= 0) partner.hp = partner.maxHp;
+    charmActive = false;
+    document.getElementById("btl-item-drawer").classList.remove("open");
+    document.getElementById("btl-log").textContent = `Wild ${currentWild.name} appeared! Choose an action!`;
+    updateBattleUI();
+    showScreen("screen-battle");
+  }
+
+  function getCapturePercentage() {
+    if (!currentWild) return 0;
+    let baseOdds = 50;
+    if (currentWild.rarity === "Uncommon") baseOdds = 35;
+    if (currentWild.rarity === "Rare") baseOdds = 20;
+
+    const missingHpRatio = 1 - (currentWild.hp / currentWild.maxHp);
+    const hpBonus = Math.round(missingHpRatio * 45);
+    const charmBonus = charmActive ? 25 : 0;
+    return Math.min(98, Math.max(10, baseOdds + hpBonus + charmBonus));
+  }
+
+  function updateBattleUI() {
+    const partner = player.collection[player.activePartnerIndex];
+    document.getElementById("btl-enemy-name").textContent = `${currentWild.name} (Lv.${currentWild.level})`;
+    document.getElementById("btl-enemy-art").innerHTML = getCreatureArt(currentWild.id, 8);
+    document.getElementById("btl-enemy-badges").innerHTML =
+      `<span class="badge type-${currentWild.type}">${currentWild.type}</span>` +
+      `<span class="badge rare-${currentWild.rarity}">${currentWild.rarity}</span>`;
+
+    const enemyPct = Math.max(0, (currentWild.hp / currentWild.maxHp) * 100);
+    document.getElementById("btl-enemy-hp-bar").style.width = enemyPct + "%";
+    document.getElementById("btl-enemy-hp-text").textContent = `HP: ${currentWild.hp}/${currentWild.maxHp}`;
+
+    document.getElementById("btl-player-name").textContent = `${partner.name} (Lv.${partner.level})`;
+    document.getElementById("btl-player-art").innerHTML = getCreatureArt(partner.id, 6);
+    const playerPct = Math.max(0, (partner.hp / partner.maxHp) * 100);
+    document.getElementById("btl-player-hp-bar").style.width = playerPct + "%";
+    document.getElementById("btl-player-hp-text").textContent = `HP: ${partner.hp}/${partner.maxHp}`;
+
+    const odds = getCapturePercentage();
+    const charmTag = charmActive ? " 🧿+25%" : "";
+    document.getElementById("btl-catch-odds").textContent = `Catch Odds: ${odds}%${charmTag}`;
+    document.getElementById("btn-basic").textContent = `⚔️ ${partner.basic}`;
+    document.getElementById("btn-special").textContent = `✨ ${partner.special}`;
+    document.getElementById("btn-capture").textContent = `🏮 Catch (${odds}%)`;
+
+    renderBattleItemButtons();
+    updateTopBarAndHome();
+  }
+
+  function triggerShake(elementId) {
+    const el = document.getElementById(elementId);
+    el.classList.remove("shake-hit");
+    void el.offsetWidth;
+    el.classList.add("shake-hit");
+  }
+
+  function toggleBattleItemDrawer() {
+    playSfx("tap");
+    const drawer = document.getElementById("btl-item-drawer");
+    drawer.classList.toggle("open");
+    renderBattleItemButtons();
+  }
+
+  function renderBattleItemButtons() {
+    const container = document.getElementById("btl-item-buttons");
+    container.innerHTML = "";
+    ITEM_DEX.forEach(item => {
+      const count = player.inventory[item.key] || 0;
+      const btn = document.createElement("button");
+      btn.className = "btn-blue";
+      btn.style.marginTop = "4px";
+      btn.style.padding = "8px";
+      btn.style.fontSize = "12px";
+      btn.disabled = count <= 0;
+      btn.textContent = `${item.icon} ${item.name} (${count})`;
+      btn.onclick = () => useItem(item.key, true);
+      container.appendChild(btn);
+    });
+  }
+
+  function useItem(itemKey, inBattle) {
+    const count = player.inventory[itemKey] || 0;
+    if (count <= 0) return;
+    const partner = player.collection[player.activePartnerIndex];
+    let msg = "";
+
+    if (itemKey === "potion") {
+      if (partner.hp >= partner.maxHp) {
+        setFeedback(`${partner.name} is already at full HP!`, inBattle);
+        return;
+      }
+      partner.hp = Math.min(partner.maxHp, partner.hp + 20);
+      player.inventory.potion -= 1;
+      msg = `🧪 Used Healing Potion! ${partner.name} recovered +20 HP!`;
+    } else if (itemKey === "battery") {
+      if (player.lanternEnergy >= player.maxLantern) {
+        setFeedback("🏮 Lantern is already full (5/5)!", inBattle);
+        return;
+      }
+      player.lanternEnergy = Math.min(player.maxLantern, player.lanternEnergy + 2);
+      player.inventory.battery -= 1;
+      msg = "🔋 Used Lantern Battery! Restored +2 Lantern Energy!";
+    } else if (itemKey === "charm") {
+      if (!inBattle) {
+        setFeedback("🧿 Use the Binding Charm during a Battle to boost catch odds!", false);
+        return;
+      }
+      if (charmActive) {
+        setFeedback("🧿 A Binding Charm is already active for your next throw!", true);
+        return;
+      }
+      charmActive = true;
+      player.inventory.charm -= 1;
+      msg = "🧿 Binding Charm activated! Next capture attempt gets +25% odds!";
+    } else if (itemKey === "shard") {
+      player.inventory.shard -= 1;
+      const lvlUp = gainCreatureXp(partner, 20);
+      msg = `💎 Used Spirit Shard! ${partner.name} gained +20 XP${lvlUp ? " & LEVELED UP!" : "!"}`;
+    }
+
+    playSfx("catch");
+    saveGame();
+    setFeedback(msg, inBattle);
+    if (inBattle) {
+      document.getElementById("btl-item-drawer").classList.remove("open");
+      updateBattleUI();
+    } else {
+      openInventory(msg);
+    }
+  }
+
+  function setFeedback(msg, inBattle) {
+    if (inBattle) {
+      document.getElementById("btl-log").textContent = msg;
+    } else {
+      document.getElementById("inv-msg").textContent = msg;
+    }
+  }
+
+  function playerAttack(moveType) {
+    playSfx("hit");
+    triggerShake("btl-enemy-art");
+    const partner = player.collection[player.activePartnerIndex];
+    let dmg = Math.max(2, partner.atk - Math.floor(currentWild.def / 2));
+    let moveName = partner.basic;
+
+    if (moveType === "special") {
+      moveName = partner.special;
+      dmg = Math.round(dmg * 1.35);
+      if (
+        (partner.type === "Spirit" && currentWild.type === "Shadow") ||
+        (partner.type === "Shadow" && currentWild.type === "Spirit") ||
+        (partner.type === "Fire" && currentWild.type === "Nature") ||
+        (partner.type === "Nature" && currentWild.type === "Fire")
+      ) {
+        dmg += 3;
+      }
+    }
+
+    currentWild.hp = Math.max(0, currentWild.hp - dmg);
+    updateBattleUI();
+
+    if (currentWild.hp <= 0) {
+      playSfx("catch");
+      codeCooldowns[lastScannedCode] = Date.now() + COOLDOWN_MS;
+      gainPlayerXp(12);
+      const leveled = gainCreatureXp(partner, 12);
+      saveGame();
+      document.getElementById("home-msg").textContent =
+        `🏆 Defeated ${currentWild.name}! +12 XP${leveled ? ` (${partner.name} reached Lv.${partner.level}!)` : ""}`;
+      document.querySelectorAll(".screen").forEach(s => s.classList.remove("active"));
+      document.getElementById("screen-home").classList.add("active");
+      updateTopBarAndHome();
+      return;
+    }
+
+    enemyTurn(`${partner.name} used ${moveName} for ${dmg} dmg!`);
+  }
+
+  function attemptCapture() {
+    if (player.lanternEnergy <= 0) {
+      playSfx("fail");
+      document.getElementById("btl-log").textContent =
+        "🏮 Out of Lantern Energy! Use a Lantern Battery or Flee & Refill!";
+      return;
+    }
+
+    player.lanternEnergy -= 1;
+    const odds = getCapturePercentage();
+    charmActive = false;
+    const roll = Math.random() * 100;
+
+    if (roll < odds) {
+      playSfx("catch");
+      codeCooldowns[lastScannedCode] = Date.now() + COOLDOWN_MS;
+      player.collection.push(currentWild);
+      const partner = player.collection[player.activePartnerIndex];
+      gainPlayerXp(15);
+      const leveled = gainCreatureXp(partner, 15);
+      saveGame();
+      document.getElementById("home-msg").textContent =
+        `🎉 Caught ${currentWild.name}! +15 XP${leveled ? ` (${partner.name} reached Lv.${partner.level}!)` : ""}`;
+      document.querySelectorAll(".screen").forEach(s => s.classList.remove("active"));
+      document.getElementById("screen-home").classList.add("active");
+      updateTopBarAndHome();
+    } else {
+      playSfx("fail");
+      saveGame();
+      enemyTurn(`🏮 Capture failed (${odds}% chance)! ${currentWild.name} broke free!`);
+    }
+  }
+
+  function enemyTurn(previousMessage) {
+    triggerShake("btl-player-art");
+    const partner = player.collection[player.activePartnerIndex];
+    const useSpecial = Math.random() < 0.35;
+    const enemyMove = useSpecial ? currentWild.special : currentWild.basic;
+    let dmg = Math.max(2, currentWild.atk - Math.floor(partner.def / 2));
+    if (useSpecial) dmg = Math.round(dmg * 1.25);
+
+    partner.hp = Math.max(0, partner.hp - dmg);
+    document.getElementById("btl-log").textContent =
+      `${previousMessage} Wild ${currentWild.name} used ${enemyMove} (-${dmg} HP)!`;
+    updateBattleUI();
+
+    if (partner.hp <= 0) {
+      playSfx("fail");
+      partner.hp = partner.maxHp;
+      saveGame();
+      document.getElementById("home-msg").textContent =
+        `💫 ${partner.name} fainted! Returned home with a free full recovery.`;
+      document.querySelectorAll(".screen").forEach(s => s.classList.remove("active"));
+      document.getElementById("screen-home").classList.add("active");
+      updateTopBarAndHome();
+    }
+  }
+
+  function fleeBattle() {
+    playSfx("tap");
+    saveGame();
+    document.getElementById("home-msg").textContent = `🏃 Safely fled from ${currentWild.name}.`;
+    showScreen("screen-home");
+  }
+
+  function gainPlayerXp(amount) {
+    player.xp += amount;
+    while (player.xp >= player.xpNeeded) {
+      player.xp -= player.xpNeeded;
+      player.level += 1;
+      player.xpNeeded = Math.round(player.xpNeeded * 1.3);
+    }
+  }
+
+  function gainCreatureXp(creature, amount) {
+    creature.xp = (creature.xp || 0) + amount;
+    creature.xpNeeded = creature.xpNeeded || 15;
+    let leveledUp = false;
+    while (creature.xp >= creature.xpNeeded) {
+      creature.xp -= creature.xpNeeded;
+      creature.level += 1;
+      creature.xpNeeded = Math.round(creature.xpNeeded * 1.35);
+      creature.maxHp += 4;
+      creature.hp = creature.maxHp;
+      creature.atk += 2;
+      creature.def += 1;
+      leveledUp = true;
+    }
+    return leveledUp;
+  }
+
+  function openCollection() {
+    const listEl = document.getElementById("collection-list");
+    listEl.innerHTML = "";
+
+    player.collection.forEach((c, index) => {
+      const isPartner = index === player.activePartnerIndex;
+      const card = document.createElement("div");
+      card.className = "list-card";
+      card.innerHTML = `
+        <div style="display:flex;align-items:center;gap:10px;">
+          <div>${getCreatureArt(c.id, 5)}</div>
+          <div>
+            <strong style="color:#55ffaa;">${c.name}</strong> (Lv.${c.level})
+            <div style="margin-top:3px;">
+              <span class="badge type-${c.type}">${c.type}</span>
+              <span class="badge rare-${c.rarity}">${c.rarity}</span>
+            </div>
+            <div class="small-note">HP: ${c.hp}/${c.maxHp} | ATK: ${c.atk} | DEF: ${c.def}</div>
+          </div>
+        </div>
+        <div style="min-width:95px;">
+          ${isPartner
+            ? `<button class="btn-gray" style="margin:0;padding:8px;font-size:12px;" disabled>⭐ PARTNER</button>`
+            : `<button class="btn-blue" style="margin:0;padding:8px;font-size:12px;" onclick="selectPartner(${index})">SET PARTNER</button>`
+          }
+        </div>
+      `;
+      listEl.appendChild(card);
+    });
+
+    showScreen("screen-collection");
+  }
+
+  function selectPartner(index) {
+    playSfx("tap");
+    player.activePartnerIndex = index;
+    saveGame();
+    openCollection();
+  }
+
+  function openInventory(customMsg) {
+    const listEl = document.getElementById("inventory-list");
+    listEl.innerHTML = "";
+    document.getElementById("inv-msg").textContent =
+      customMsg || "Tap USE to spend an item on your Active Partner or Lantern!";
+
+    ITEM_DEX.forEach(item => {
+      const count = player.inventory[item.key] || 0;
+      const card = document.createElement("div");
+      card.className = "list-card";
+      card.innerHTML = `
+        <div style="display:flex;align-items:center;gap:10px;">
+          <div>${renderPixelArt(item.art, 5)}</div>
+          <div>
+            <strong style="color:#ffdd55;">${item.name}</strong> (x${count})
+            <div class="small-note">${item.desc}</div>
+          </div>
+        </div>
+        <div style="min-width:80px;">
+          <button class="btn-green" style="margin:0;padding:8px;font-size:13px;" ${count <= 0 ? "disabled" : ""} onclick="useItem('${item.key}', false)">USE</button>
+        </div>
+      `;
+      listEl.appendChild(card);
+    });
+
+    showScreen("screen-inventory");
+  }
+
+  loadGame();
+  updateTopBarAndHome();
+</script>
+
+</body>
+</html>
